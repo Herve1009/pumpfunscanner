@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  password   String
+  username   String?
+  premium    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  favorites  Favorite[]
+}
+
+model Token {
+  id          String   @id @default(cuid())
+  mint        String   @unique
+  symbol      String
+  name        String
+  score       Int
+  signal      String
+  price       Float
+  liquidity   Float
+  volume      Float
+  marketCap   Float
+  holders     Int
+  createdAt   DateTime @default(now())
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenMint String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}

@@ -1,0 +1,74 @@
+require("dotenv").config();
+
+const express = require("express");
+const cors = require("cors");
+
+const tokenRoutes = require("./routes/tokens");
+const topRoutes = require("./routes/top");
+const { scanLatestBlock } = require("./scanner/blockScanner");
+const { initDatabase } = require("./database/database");
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+// Sert les fichiers du dossier public
+app.use(express.static("public"));
+
+// Page d'accueil
+app.get("/", (req, res) => {
+    res.sendFile(__dirname + "/public/index.html");
+});
+
+// Vérification API
+app.get("/api/health", (req, res) => {
+    res.json({
+        success: true,
+        status: "online",
+        version: "5.0"
+    });
+});
+
+// API Tokens
+app.use("/api/tokens", tokenRoutes);
+app.use("/api/top", topRoutes);
+
+// Initialisation PostgreSQL
+(async () => {
+    try {
+        await initDatabase();
+    } catch (err) {
+        console.error("Erreur PostgreSQL :", err.message);
+    }
+})();
+
+// Premier scan
+(async () => {
+    try {
+        await scanLatestBlock();
+    } catch (err) {
+        console.error("Erreur scan initial :", err.message);
+    }
+})();
+
+// Scan toutes les 15 secondes
+setInterval(async () => {
+    try {
+        await scanLatestBlock();
+    } catch (err) {
+        console.error("Erreur scan :", err.message);
+    }
+}, 15000);
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log("========================================");
+    console.log("🚀 PumpFunScanner PRO V5");
+    console.log("========================================");
+    console.log(`🌐 Dashboard : http://localhost:${PORT}`);
+    console.log(`📡 API       : http://localhost:${PORT}/api/tokens`);
+    console.log(`❤️ Health    : http://localhost:${PORT}/api/health`);
+    console.log("========================================");
+});
