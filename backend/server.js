@@ -57,7 +57,7 @@ app.use("/api/ranking", rankingRoute);
     try {
         await initDatabase();
     } catch (err) {
-        logger.error("Erreur PostgreSQL :", err.message);
+        console.error("Erreur PostgreSQL DETAIL:", err.message, err.stack);
     }
 })();
 
